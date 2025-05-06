@@ -1,0 +1,3 @@
+[submodule "42/media/lua/shared/DelranLib"]
+	path = 42/media/lua/shared/DelranLib
+	url = https://github.com/dot-tb/zomboid-delran-lib.git

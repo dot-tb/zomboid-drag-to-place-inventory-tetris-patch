@@ -1,17 +1,32 @@
+local activatedMods = getActivatedMods();
+if not activatedMods:contains("INVENTORY_TETRIS") then return end;
+
 local DragToPlace = require("DelranDragToPlace/DelranDragToPlace_Main");
 local DelranUtils = require("DelranDragToPlace/DelranLib/DelranUtils");
+local UICodeRunner = require("DelranDragToPlace/DelranDragToPlace_UICodeRunner");
 
-local dprint = DelranUtils.GetDebugPrint("[DRAG TO PLACE, TETRIS PATCH]")
+require "EquipmentUI/DragAndDrop"
+require "InventoryTetris/Patches/Core/DragAndDrop_TetrisExtensions"
+require "InventoryTetris/ItemGrid/UI/Container/ItemGridContainerUI"
+require "InventoryTetris/ItemGrid/UI/TetrisDragItemRenderer"
+require "EquipmentUI/UI/EquipmentUI"
+require "EquipmentUI/UI/EquipmentSlot"
+require "EquipmentUI/UI/EquipmentSuperSlot"
+require "EquipmentUI/UI/WeaponSlot"
+require "EquipmentUI/UI/HotbarSlot"
 
-local DragAndDrop = require("InventoryTetris/System/DragAndDrop");
-local DragItemRenderer = require("InventoryTetris/UI/TetrisDragItemRenderer");
 
-local UICodeRunner = require("DelranDragToPlace/DelranDragToPlace_UICodeRunner")
+local dprint = DelranUtils.GetDebugPrint("[DRAG TO PLACE, TETRIS PATCH]");
+dprint("Loading module");
+local DragAndDrop = DragAndDrop;
+local DragItemRenderer = DragItemRenderer;
+--local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI_rendering");
+local ItemGridContainerUI = ItemGridContainerUI;
 
 ---@return InventoryItem[] | nil
 local function getItemFromDragAndDrop()
     ---@type ISInventoryPaneDraggedItems
-    local vanillaStack = DragAndDrop.getDraggedStacks();
+    local vanillaStack = DragAndDrop.getDraggedStack();
     if not vanillaStack then return nil end;
 
     local draggedItems = nil;
@@ -38,6 +53,7 @@ function ISInventoryPane:onMouseMove(dx, dy)
     end
 end
 
+--- Disabling onMouseMoveOutside otherwise an error occurs
 ---@diagnostic disable-next-line: duplicate-set-field
 function ISInventoryPane:onMouseMoveOutside(dx, dy)
 end
@@ -46,8 +62,10 @@ ORIGINAL_UICodeRunner_onMouseUpOutside = ORIGINAL_UICodeRunner_onMouseUpOutside 
 function UICodeRunner:onMouseUpOutside(x, y)
     local playerNum = self.dragToPlace.playerIndex;
     ORIGINAL_UICodeRunner_onMouseUpOutside(self);
+    --- Code from equipmentUI will not run when the inventory page are closed.
+    --- We we finish a drag while the inventory page is closed, we finish the
+    --- equipmentUI drag ourselves.
     if not self.dragToPlace.playerInventory:isVisible() then
-        --- Canceling InventoryTetris drag and dropping the dragged item.
         DragAndDrop.ownersForCancel[ISMouseDrag.dragOwner] = {
             callback = function()
                 local stack = DragAndDrop.getDraggedStack();
@@ -70,15 +88,6 @@ function DragItemRenderer:render()
     ORIGINAL_DragItemRenderer_render(self);
 end
 
--- Override IsDragging to return false when we are placing an item.
-ORIGINAL_DragAndDrop_isDragging = ORIGINAL_DragAndDrop_isDragging or DragAndDrop.isDragging;
----@diagnostic disable-next-line: duplicate-set-field
-function DragAndDrop:isDragging()
-    -- Disabling Inventory tetris drag renderer if the 3d cursor is visible
-    if DragToPlace:IsVisible() then return false end;
-    return ORIGINAL_DragAndDrop_isDragging(self);
-end
-
 ORIGINAL_DragToPlace_PlaceItem = ORIGINAL_DragToPlace_PlaceItem or DragToPlace.PlaceItem;
 ---@diagnostic disable-next-line: duplicate-set-field
 function DragToPlace:PlaceItem()
@@ -86,17 +95,5 @@ function DragToPlace:PlaceItem()
     ORIGINAL_DragToPlace_PlaceItem(self);
     if not canceled then
         DragAndDrop.endDrag();
-    end
-end
-
-ORIGINAL_EquipmentUIWindow_onMouseMove = ORIGINAL_EquipmentUIWindow_onMouseMove or EquipmentUIWindow.onMouseMove;
----@diagnostic disable-next-line: duplicate-set-field
-function EquipmentUIWindow:onMouseMove(dx, dy)
-    ORIGINAL_EquipmentUIWindow_onMouseMove(self, dx, dy);
-    if not DragToPlace.placingItem and DragAndDrop:isDragging() then
-        local draggedItems = getItemFromDragAndDrop();
-        if draggedItems then
-            DragToPlace:Start(getPlayer(), draggedItems, self);
-        end
     end
 end

@@ -1,6 +1,3 @@
-local activatedMods = getActivatedMods();
-if not activatedMods:contains("INVENTORY_TETRIS") then return end;
-
 local DragToPlace = require("DelranDragToPlace/DelranDragToPlace_Main");
 local DelranUtils = require("DelranDragToPlace/DelranLib/DelranUtils");
 local UICodeRunner = require("DelranDragToPlace/DelranDragToPlace_UICodeRunner");

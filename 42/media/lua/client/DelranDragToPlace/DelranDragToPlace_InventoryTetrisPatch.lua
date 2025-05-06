@@ -1,5 +1,3 @@
-if not getActivatedMods():contains("\\INVENTORY_TETRIS") then return end;
-
 local DragToPlace = require("DelranDragToPlace/DelranDragToPlace_Main");
 local DelranUtils = require("DelranDragToPlace/DelranLib/DelranUtils");
 

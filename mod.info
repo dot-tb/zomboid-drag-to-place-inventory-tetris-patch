@@ -6,4 +6,5 @@ description=
 poster=poster.png
 icon=poster.png
 require=\DelranDragToPlace,\INVENTORY_TETRIS
-versionMin=42.0.0
+versionMin=41.0.0
+versionMax=41.78.0

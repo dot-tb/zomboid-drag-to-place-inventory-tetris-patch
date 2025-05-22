@@ -22,7 +22,7 @@ local ItemGridContainerUI = ItemGridContainerUI;
 
 ---@return InventoryItem[] | nil
 local function getItemFromDragAndDrop()
-    ---@type ISInventoryPaneDraggedItems
+    ---@type ISInventoryPaneDraggedItems | nil
     local vanillaStack = DragAndDrop.getDraggedStack();
     if not vanillaStack then return nil end;
 
